@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -13,21 +14,44 @@ import {
   Network,
   ArrowRight,
   UserX,
+  TrendingUp,
 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { StatCard } from "@/components/ui/StatCard";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { AlertBanner } from "@/components/ui/AlertBanner";
 import { BarChart } from "@/components/ui/BarChart";
-import { ButtonLink } from "@/components/ui/Button";
+import {
+  DashboardHero,
+  DashboardQuickLinks,
+} from "@/components/dashboard/DashboardHero";
+import {
+  TodayFocusPanel,
+  TasksSummaryCard,
+} from "@/components/dashboard/TodayFocusPanel";
+import { WeeklySchedulePanel } from "@/components/dashboard/WeeklySchedulePanel";
 import { useMembers } from "@/context/MemberContext";
-import { getDashboardStats } from "@/lib/member-utils";
+import { getExtendedDashboard, getPrioritySummary } from "@/lib/dashboard-utils";
 
 export default function DashboardPage() {
-  const { members } = useMembers();
-  const stats = getDashboardStats(members);
+  const { members, tasks } = useMembers();
+
+  const data = useMemo(
+    () => getExtendedDashboard(members, tasks),
+    [members, tasks]
+  );
+  const stats = data.base;
+  const priority = useMemo(() => getPrioritySummary(members), [members]);
 
   const actionItems = [
+    data.actionsOverdue.length > 0 && {
+      title: "期限超過のフォローがあります",
+      description: "次回アクション日を過ぎたメンバーがいます。優先的に対応してください。",
+      href: "/members",
+      value: data.actionsOverdue.length,
+      icon: Calendar,
+      tone: "warning" as const,
+    },
     stats.incomplete > 0 && {
       title: "情報不足のメンバーがいます",
       description: "区分・紹介者・連絡先など、あとから補完が必要です。",
@@ -44,17 +68,17 @@ export default function DashboardPage() {
       icon: UserX,
       tone: "warning" as const,
     },
-    stats.needsReferralConfirm > 0 && {
-      title: "紹介者確認が必要",
-      description: "連絡前に、紹介者への確認を進めましょう。",
+    data.taskInsights.overdue > 0 && {
+      title: "期限超過のタスク",
+      description: "タスク画面で確認・完了処理を行ってください。",
       href: "/tasks",
-      value: stats.needsReferralConfirm,
+      value: data.taskInsights.overdue,
       icon: Phone,
       tone: "info" as const,
     },
     stats.upcomingActions > 0 && {
-      title: "次回アクションが近い",
-      description: "7日以内に予定されているフォローがあります。",
+      title: "7日以内のフォロー予定",
+      description: "今週中にアクションが予定されているメンバーがいます。",
       href: "/tasks",
       value: stats.upcomingActions,
       icon: Calendar,
@@ -64,40 +88,31 @@ export default function DashboardPage() {
 
   return (
     <Layout>
-      {/* Hero */}
-      <section className="page-enter mb-10 overflow-hidden rounded-3xl gradient-hero p-6 sm:p-8 lg:p-10 text-white shadow-card">
-        <div className="relative z-10 max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-200/90">
-            Supira 知力会ネットワーク管理
-          </p>
-          <h1 className="mt-2 text-2xl font-bold sm:text-3xl lg:text-4xl text-balance leading-tight">
-            紹介ネットワークを活かした
-            <br className="hidden sm:block" />
-            求人開拓・人脈管理
-          </h1>
-          <p className="mt-4 text-sm sm:text-base leading-relaxed text-teal-100/90">
-            名簿 {stats.total.toLocaleString()} 名をベースに、紹介者ごとのつながりと求人開拓候補を一元管理します。
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <ButtonLink href="/import" variant="accent" icon={FileUp} className="!bg-white !text-supira-primary hover:!bg-teal-50">
-              名簿CSVを取り込む
-            </ButtonLink>
-            <ButtonLink
-              href="/recruiting"
-              variant="secondary"
-              className="!border-white/20 !bg-white/10 !text-white hover:!bg-white/20"
-            >
-              求人開拓候補を見る
-            </ButtonLink>
-          </div>
-        </div>
-        <div className="pointer-events-none absolute -right-8 -top-8 h-48 w-48 rounded-full bg-teal-400/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-12 right-1/4 h-32 w-32 rounded-full bg-blue-400/10 blur-2xl" />
+      <DashboardHero data={data} />
+      <DashboardQuickLinks />
+
+      {/* Today focus + Tasks */}
+      <section className="mb-8 grid gap-6 lg:grid-cols-2">
+        <TodayFocusPanel
+          actionsToday={data.actionsToday}
+          actionsOverdue={data.actionsOverdue}
+          staleContacts={data.staleContacts}
+        />
+        <TasksSummaryCard
+          dueToday={data.taskInsights.dueToday}
+          overdue={data.taskInsights.overdue}
+          active={data.taskInsights.active}
+          urgent={data.taskInsights.urgent}
+        />
       </section>
 
-      {/* Action alerts */}
+      <WeeklySchedulePanel schedule={data.weeklySchedule} />
+
       {actionItems.length > 0 && (
-        <section className="mb-10 space-y-3">
+        <section className="mb-8 space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-supira-subtle">
+            要対応アラート
+          </h2>
           {actionItems.map((item) =>
             item ? (
               <AlertBanner
@@ -114,10 +129,45 @@ export default function DashboardPage() {
         </section>
       )}
 
-      {/* Key metrics */}
-      <section className="mb-10">
+      {/* HR insights row */}
+      <section className="mb-8">
         <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-supira-subtle">
-          メンバー概要
+          人材管理サマリー
+        </h2>
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            label="名簿データ充足率"
+            value={`${data.avgCompleteness}%`}
+            icon={TrendingUp}
+            accent
+            sub="平均スコア"
+          />
+          <StatCard
+            label="要フォロー候補"
+            value={priority.needsAttention}
+            icon={AlertCircle}
+            highlight={priority.needsAttention > 0}
+            sub="不足・未確認"
+          />
+          <StatCard
+            label="注目リード"
+            value={priority.hotLeads}
+            icon={Star}
+            highlight={priority.hotLeads > 0}
+            sub="Aランク×求人候補"
+          />
+          <StatCard
+            label="今週の予定"
+            value={data.actionsThisWeek.length}
+            icon={Calendar}
+            sub="7日以内"
+          />
+        </div>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-supira-subtle">
+          メンバー構成
         </h2>
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <StatCard label="総メンバー" value={stats.total} icon={Users} accent />
@@ -129,7 +179,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-2 mb-10">
+      <div className="grid gap-6 lg:grid-cols-2 mb-8">
         <section>
           <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-supira-subtle">
             紹介・求人の状況
@@ -143,18 +193,18 @@ export default function DashboardPage() {
         </section>
         <section>
           <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-supira-subtle">
-            今週のアクション
+            連絡・アクション
           </h2>
           <div className="grid gap-4 grid-cols-2">
             <StatCard label="紹介者確認が必要" value={stats.needsReferralConfirm} />
             <StatCard label="本人へ連絡予定" value={stats.contactPlanned} icon={Phone} />
-            <StatCard label="アクション近い（7日）" value={stats.upcomingActions} icon={Calendar} />
+            <StatCard label="本日フォロー" value={data.actionsToday.length} icon={Calendar} accent />
             <StatCard label="最近のCSV取込" value={stats.recentlyImported} icon={FileUp} sub="30日以内" />
           </div>
         </section>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2 mb-10">
+      <div className="grid gap-6 lg:grid-cols-2 mb-8">
         <Card hover>
           <CardHeader title="業種別分布" />
           <BarChart
