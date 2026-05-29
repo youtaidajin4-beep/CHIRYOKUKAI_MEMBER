@@ -1,4 +1,4 @@
-import type { Member, Task } from "./types";
+import type { Member } from "./types";
 import {
   getDashboardStats,
   hasNoReferrer,
@@ -166,58 +166,6 @@ export function getWeeklySchedule(
   return buckets;
 }
 
-export interface TaskInsights {
-  total: number;
-  active: number;
-  inProgress: number;
-  done: number;
-  dueToday: number;
-  overdue: number;
-  dueThisWeek: number;
-  urgent: Task[];
-}
-
-export function getTaskInsights(tasks: Task[], now = new Date()): TaskInsights {
-  const today = startOfDay(now);
-  const weekEnd = new Date(today);
-  weekEnd.setDate(weekEnd.getDate() + 7);
-
-  const active = tasks.filter((t) => t.status !== "完了");
-  const urgent: Task[] = [];
-
-  let dueToday = 0;
-  let overdue = 0;
-  let dueThisWeek = 0;
-
-  for (const task of active) {
-    const due = parseActionDate(task.dueDate);
-    if (!due) continue;
-    const dueDay = startOfDay(due);
-    const diff = daysBetween(today, dueDay);
-
-    if (diff < 0) {
-      overdue++;
-      urgent.push(task);
-    } else if (diff === 0) {
-      dueToday++;
-      urgent.push(task);
-    } else if (dueDay < weekEnd) {
-      dueThisWeek++;
-    }
-  }
-
-  return {
-    total: tasks.length,
-    active: active.length,
-    inProgress: tasks.filter((t) => t.status === "進行中").length,
-    done: tasks.filter((t) => t.status === "完了").length,
-    dueToday,
-    overdue,
-    dueThisWeek,
-    urgent: urgent.slice(0, 5),
-  };
-}
-
 export interface ExtendedDashboard {
   base: ReturnType<typeof getDashboardStats>;
   avgCompleteness: number;
@@ -226,13 +174,11 @@ export interface ExtendedDashboard {
   actionsThisWeek: ActionMember[];
   weeklySchedule: WeeklyDayBucket[];
   staleContacts: StaleContactMember[];
-  taskInsights: TaskInsights;
   healthScore: number;
 }
 
 export function getExtendedDashboard(
   members: Member[],
-  tasks: Task[],
   now = new Date()
 ): ExtendedDashboard {
   const base = getDashboardStats(members);
@@ -251,10 +197,7 @@ export function getExtendedDashboard(
       : 0;
 
   const issues =
-    base.incomplete +
-    base.noReferrer +
-    actionsOverdue.length +
-    getTaskInsights(tasks, now).overdue;
+    base.incomplete + base.noReferrer + actionsOverdue.length;
 
   const maxIssues = Math.max(members.length * 0.3, 10);
   const healthScore = Math.max(
@@ -270,7 +213,6 @@ export function getExtendedDashboard(
     actionsThisWeek,
     weeklySchedule: getWeeklySchedule(actionMembers, now),
     staleContacts: getStaleContacts(members, 90, now),
-    taskInsights: getTaskInsights(tasks, now),
     healthScore,
   };
 }

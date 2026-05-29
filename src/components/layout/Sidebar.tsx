@@ -10,7 +10,6 @@ import {
   AlertCircle,
   Network,
   Briefcase,
-  CheckSquare,
   Copy,
   Menu,
   X,
@@ -40,7 +39,6 @@ const navGroups = [
     items: [
       { href: "/referrers", label: "紹介者ネットワーク", icon: Network },
       { href: "/recruiting", label: "求人開拓候補", icon: Briefcase },
-      { href: "/tasks", label: "タスク", icon: CheckSquare },
     ],
   },
 ];

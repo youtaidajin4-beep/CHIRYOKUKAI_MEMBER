@@ -25,21 +25,15 @@ import {
   DashboardHero,
   DashboardQuickLinks,
 } from "@/components/dashboard/DashboardHero";
-import {
-  TodayFocusPanel,
-  TasksSummaryCard,
-} from "@/components/dashboard/TodayFocusPanel";
+import { TodayFocusPanel } from "@/components/dashboard/TodayFocusPanel";
 import { WeeklySchedulePanel } from "@/components/dashboard/WeeklySchedulePanel";
 import { useMembers } from "@/context/MemberContext";
 import { getExtendedDashboard, getPrioritySummary } from "@/lib/dashboard-utils";
 
 export default function DashboardPage() {
-  const { members, tasks } = useMembers();
+  const { members } = useMembers();
 
-  const data = useMemo(
-    () => getExtendedDashboard(members, tasks),
-    [members, tasks]
-  );
+  const data = useMemo(() => getExtendedDashboard(members), [members]);
   const stats = data.base;
   const priority = useMemo(() => getPrioritySummary(members), [members]);
 
@@ -68,18 +62,10 @@ export default function DashboardPage() {
       icon: UserX,
       tone: "warning" as const,
     },
-    data.taskInsights.overdue > 0 && {
-      title: "期限超過のタスク",
-      description: "タスク画面で確認・完了処理を行ってください。",
-      href: "/tasks",
-      value: data.taskInsights.overdue,
-      icon: Phone,
-      tone: "info" as const,
-    },
     stats.upcomingActions > 0 && {
       title: "7日以内のフォロー予定",
       description: "今週中にアクションが予定されているメンバーがいます。",
-      href: "/tasks",
+      href: "/members",
       value: stats.upcomingActions,
       icon: Calendar,
       tone: "info" as const,
@@ -91,18 +77,11 @@ export default function DashboardPage() {
       <DashboardHero data={data} />
       <DashboardQuickLinks />
 
-      {/* Today focus + Tasks */}
-      <section className="mb-8 grid gap-6 lg:grid-cols-2">
+      <section className="mb-8">
         <TodayFocusPanel
           actionsToday={data.actionsToday}
           actionsOverdue={data.actionsOverdue}
           staleContacts={data.staleContacts}
-        />
-        <TasksSummaryCard
-          dueToday={data.taskInsights.dueToday}
-          overdue={data.taskInsights.overdue}
-          active={data.taskInsights.active}
-          urgent={data.taskInsights.urgent}
         />
       </section>
 

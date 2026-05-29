@@ -387,20 +387,6 @@ const obCount = members.filter((m) => m.type === "OB").length;
 const ogCount = members.filter((m) => m.type === "OG").length;
 const studentCount = members.filter((m) => m.type === "学生").length;
 
-const tasks = members
-  .filter((m) => m.lastContactDate && m.referrerName)
-  .slice(0, 12)
-  .map((m, i) => ({
-    id: `t-${String(i + 1).padStart(3, "0")}`,
-    memberId: m.id,
-    memberName: m.name,
-    taskType: m.memo.includes("転職") ? "求人開拓の相談をする" : "紹介者に確認する",
-    title: `${m.name}さんのフォロー`,
-    dueDate: "2026-06-15",
-    status: i % 3 === 0 ? "進行中" : "未着手",
-    memo: (m.memo || "").slice(0, 80),
-  }));
-
 const dataDir = path.join(__dirname, "../src/data");
 fs.mkdirSync(dataDir, { recursive: true });
 fs.writeFileSync(
@@ -408,19 +394,12 @@ fs.writeFileSync(
   JSON.stringify(members),
   "utf-8"
 );
-fs.writeFileSync(
-  path.join(dataDir, "initial-tasks.json"),
-  JSON.stringify(tasks),
-  "utf-8"
-);
 
 const out = `/* AUTO-GENERATED — roster.tsv + students/*.tsv */
-import type { Member, Task } from "./types";
+import type { Member } from "./types";
 import membersJson from "@/data/initial-members.json";
-import tasksJson from "@/data/initial-tasks.json";
 
 export const initialMembers = membersJson as Member[];
-export const initialTasks = tasksJson as Task[];
 `;
 
 fs.writeFileSync(path.join(__dirname, "../src/lib/mock-data.ts"), out, "utf-8");

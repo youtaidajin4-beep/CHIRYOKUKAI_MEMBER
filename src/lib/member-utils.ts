@@ -1,4 +1,4 @@
-import type { Member, MemberType, Task } from "./types";
+import type { Member, MemberType } from "./types";
 
 const WEIGHTS: { key: keyof Member; weight: number }[] = [
   { key: "name", weight: 10 },

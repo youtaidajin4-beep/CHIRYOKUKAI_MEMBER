@@ -35,10 +35,9 @@ export function DashboardHero({ data, userName }: DashboardHeroProps) {
   const { full, weekday } = formatJapaneseDate(now);
   const time = formatTime(now);
   const greeting = getGreeting(now.getHours());
-  const { base, actionsToday, actionsOverdue, taskInsights, healthScore, avgCompleteness } =
-    data;
+  const { base, actionsToday, actionsOverdue, healthScore, avgCompleteness } = data;
 
-  const urgentTotal = actionsOverdue.length + taskInsights.overdue;
+  const urgentTotal = actionsOverdue.length;
 
   return (
     <section className="page-enter mb-8 overflow-hidden rounded-3xl gradient-hero shadow-card">
@@ -143,8 +142,8 @@ export function DashboardHero({ data, userName }: DashboardHeroProps) {
           <HeroStatChip
             icon={AlertTriangle}
             label="期限超過"
-            value={String(actionsOverdue.length + taskInsights.overdue)}
-            sub="アクション・タスク"
+            value={String(actionsOverdue.length)}
+            sub="フォロー予定"
             tone={urgentTotal > 0 ? "warn" : "ok"}
           />
           <HeroStatChip
@@ -201,7 +200,7 @@ export function DashboardQuickLinks() {
   const links = [
     { href: "/members", label: "メンバー一覧", desc: "カード・検索" },
     { href: "/incomplete", label: "情報不足", desc: "補完が必要" },
-    { href: "/tasks", label: "タスク", desc: "ToDo管理" },
+    { href: "/recruiting", label: "求人開拓候補", desc: "候補者一覧" },
     { href: "/referrers", label: "紹介ネットワーク", desc: "紹介者ハブ" },
   ];
 

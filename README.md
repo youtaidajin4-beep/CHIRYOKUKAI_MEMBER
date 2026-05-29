@@ -41,7 +41,6 @@ npm run dev
 | `/incomplete` | 情報不足 |
 | `/referrers` | 紹介者別ネットワーク |
 | `/recruiting` | 求人開拓候補 |
-| `/tasks` | タスク |
 | `/duplicates` | 重複チェック |
 
 ## サンプルCSV

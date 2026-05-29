@@ -59,16 +59,6 @@ export type RecruitingStatus =
   | "難しい"
   | "対象外";
 
-export type TaskType =
-  | "紹介者に確認する"
-  | "本人へ連絡する"
-  | "所属企業を確認する"
-  | "求人開拓の相談をする"
-  | "OB訪問協力の可否を確認する"
-  | "学生紹介の打診をする";
-
-export type TaskStatus = "未着手" | "進行中" | "完了" | "保留";
-
 export interface Member {
   id: string;
   name: string;
@@ -106,17 +96,6 @@ export interface Member {
   duplicateWarning: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface Task {
-  id: string;
-  memberId: string;
-  memberName: string;
-  taskType: TaskType;
-  title: string;
-  dueDate: string;
-  status: TaskStatus;
-  memo: string;
 }
 
 export type MemberFieldKey = keyof Omit<
