@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --supira-canvas: #f1f5f9;
+    --supira-primary: #0f2744;
+    --supira-accent: #0d6e6e;
+    --supira-muted: #64748b;
+    --supira-border: #e2e8f0;
+    --supira-surface: #f8fafc;
+  }
+
+  html {
+    @apply antialiased scroll-smooth;
+  }
+
+  body {
+    background-color: var(--supira-canvas);
+    @apply text-slate-800;
+    font-feature-settings: "palt" 1;
+  }
+
+  ::selection {
+    @apply bg-teal-100 text-teal-900;
+  }
+}
+
+@layer components {
+  .page-enter {
+    @apply animate-slide-up;
+  }
+
+  .glass-card {
+    @apply rounded-2xl border border-white/80 bg-white/90 shadow-card backdrop-blur-sm;
+  }
+
+  .card-elevated {
+    @apply rounded-2xl border border-supira-border/70 bg-white shadow-card;
+    box-shadow:
+      0 1px 2px rgb(15 39 68 / 0.04),
+      0 8px 24px -6px rgb(15 39 68 / 0.08);
+  }
+
+  .focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-teal-500/40 focus-visible:ring-offset-2;
+  }
+
+  .table-row-interactive {
+    @apply transition-colors duration-150 hover:bg-teal-50/40;
+  }
+
+  .nav-active-indicator {
+    @apply absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-teal-600;
+  }
+
+  .gradient-hero {
+    background: linear-gradient(
+      135deg,
+      #0a1f35 0%,
+      #0f2744 35%,
+      #134e4a 85%,
+      #0d6e6e 100%
+    );
+  }
+
+  .gradient-sidebar-accent {
+    background: linear-gradient(180deg, rgb(13 110 110 / 0.08) 0%, transparent 100%);
+  }
+
+  .pattern-dots {
+    background-color: var(--supira-canvas);
+    background-image: radial-gradient(rgb(15 39 68 / 0.035) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-supira-border bg-white px-3.5 py-2.5 text-sm text-slate-800 shadow-sm transition;
+    @apply placeholder:text-supira-subtle/80;
+    @apply focus:border-teal-500/50 focus:shadow-glow focus:outline-none;
+  }
+
+  .input-field-error {
+    @apply border-orange-300 bg-orange-50/30 focus:border-orange-400;
+  }
+
+  .section-anchor {
+    scroll-margin-top: 6rem;
+  }
+
+  .member-card {
+    @apply card-elevated flex flex-col overflow-hidden transition-all duration-200;
+    @apply hover:-translate-y-0.5 hover:shadow-card-hover hover:border-teal-200/50;
+  }
+
+  .info-value-empty {
+    @apply inline-flex items-center gap-1 rounded-md bg-orange-50/80 px-2 py-0.5 text-sm text-orange-700/90 italic;
+  }
+
+  .tab-pill {
+    @apply rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 focus-ring;
+  }
+
+  .tab-pill-active {
+    @apply bg-supira-primary text-white shadow-sm;
+  }
+
+  .tab-pill-inactive {
+    @apply text-slate-600 hover:bg-white hover:text-supira-primary hover:shadow-sm;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
