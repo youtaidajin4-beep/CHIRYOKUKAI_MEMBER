@@ -63,6 +63,14 @@ export default function DashboardPage() {
       icon: UserX,
       tone: "warning" as const,
     },
+    stats.noLodge > 0 && {
+      title: "所属ロッジが未登録のメンバー",
+      description: "全員がいずれかのロッジに所属している前提です。所属ロッジを登録してください。",
+      href: "/members",
+      value: stats.noLodge,
+      icon: UserX,
+      tone: "warning" as const,
+    },
     stats.upcomingActions > 0 && {
       title: "7日以内のフォロー予定",
       description: "今週中にアクションが予定されているメンバーがいます。",
@@ -169,6 +177,7 @@ export default function DashboardPage() {
             <StatCard label="求人開拓候補" value={stats.recruitingCandidates} icon={Briefcase} accent />
             <StatCard label="情報不足" value={stats.incomplete} icon={AlertCircle} highlight={stats.incomplete > 0} />
             <StatCard label="紹介者未登録" value={stats.noReferrer} highlight={stats.noReferrer > 0} />
+            <StatCard label="所属ロッジ未登録" value={stats.noLodge} highlight={stats.noLodge > 0} />
           </div>
         </section>
         <section>

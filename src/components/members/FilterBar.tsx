@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { Card } from "@/components/ui/Card";
 import type { Member } from "@/lib/types";
+import { LODGE_OWNERS } from "@/lib/referrer-registry";
 import { useState } from "react";
 
 export interface MemberFilters {
@@ -12,6 +13,8 @@ export interface MemberFilters {
   searchCompany: string;
   searchSchool: string;
   searchReferrer: string;
+  searchLodge: string;
+  lodgeOwner: string;
   type: string;
   area: string;
   industry: string;
@@ -20,6 +23,7 @@ export interface MemberFilters {
   recruitingStatus: string;
   incompleteOnly: boolean;
   noReferrerOnly: boolean;
+  noLodgeOnly: boolean;
   duplicateOnly: boolean;
 }
 
@@ -28,6 +32,8 @@ export const defaultFilters: MemberFilters = {
   searchCompany: "",
   searchSchool: "",
   searchReferrer: "",
+  searchLodge: "",
+  lodgeOwner: "all",
   type: "all",
   area: "all",
   industry: "all",
@@ -36,6 +42,7 @@ export const defaultFilters: MemberFilters = {
   recruitingStatus: "all",
   incompleteOnly: false,
   noReferrerOnly: false,
+  noLodgeOnly: false,
   duplicateOnly: false,
 };
 
@@ -57,7 +64,8 @@ function uniqueValues(members: Member[], key: keyof Member): string[] {
 
 function countActiveFilters(f: MemberFilters): number {
   let n = 0;
-  if (f.searchName || f.searchCompany || f.searchSchool || f.searchReferrer) n++;
+  if (f.searchName || f.searchCompany || f.searchSchool || f.searchReferrer || f.searchLodge) n++;
+  if (f.lodgeOwner !== "all") n++;
   if (f.type !== "all") n++;
   if (f.area !== "all") n++;
   if (f.industry !== "all") n++;
@@ -66,6 +74,7 @@ function countActiveFilters(f: MemberFilters): number {
   if (f.recruitingStatus !== "all") n++;
   if (f.incompleteOnly) n++;
   if (f.noReferrerOnly) n++;
+  if (f.noLodgeOnly) n++;
   if (f.duplicateOnly) n++;
   return n;
 }
@@ -145,6 +154,12 @@ export function FilterBar({ filters, onChange, members, resultCount }: FilterBar
           value={filters.searchReferrer}
           onChange={(v) => set({ searchReferrer: v })}
         />
+        <SearchInput
+          placeholder="所属ロッジ"
+          value={filters.searchLodge}
+          onChange={(v) => set({ searchLodge: v })}
+          className="sm:col-span-2 lg:col-span-1"
+        />
       </div>
 
       <div
@@ -156,6 +171,7 @@ export function FilterBar({ filters, onChange, members, resultCount }: FilterBar
         <div className="overflow-hidden">
           <div className="border-t border-supira-border/80 pt-4 space-y-4">
             <div className="flex flex-wrap gap-3">
+              <SelectFilter label="所属ロッジ" value={filters.lodgeOwner} onChange={(v) => set({ lodgeOwner: v })} options={["all", ...LODGE_OWNERS]} />
               <SelectFilter label="区分" value={filters.type} onChange={(v) => set({ type: v })} options={["all", "学生", "OB", "OG", "社会人", "企業関係者", "不明"]} />
               <SelectFilter label="地域" value={filters.area} onChange={(v) => set({ area: v })} options={["all", ...areas]} />
               <SelectFilter label="業種" value={filters.industry} onChange={(v) => set({ industry: v })} options={["all", ...industries]} />
@@ -166,6 +182,7 @@ export function FilterBar({ filters, onChange, members, resultCount }: FilterBar
             <div className="flex flex-wrap gap-2">
               <ToggleChip label="情報不足のみ" active={filters.incompleteOnly} onClick={() => set({ incompleteOnly: !filters.incompleteOnly })} />
               <ToggleChip label="紹介者未登録" active={filters.noReferrerOnly} onClick={() => set({ noReferrerOnly: !filters.noReferrerOnly })} />
+              <ToggleChip label="所属ロッジ未登録" active={filters.noLodgeOnly} onClick={() => set({ noLodgeOnly: !filters.noLodgeOnly })} />
               <ToggleChip label="重複候補" active={filters.duplicateOnly} onClick={() => set({ duplicateOnly: !filters.duplicateOnly })} />
             </div>
           </div>

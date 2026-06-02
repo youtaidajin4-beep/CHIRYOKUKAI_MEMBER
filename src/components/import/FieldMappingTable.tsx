@@ -19,6 +19,7 @@ const MAPPABLE_FIELDS: (MemberFieldKey | "")[] = [
   "phone",
   "facebookUrl",
   "referrerName",
+  "lodgeOwnerName",
   "referrerRelation",
   "memo",
 ];

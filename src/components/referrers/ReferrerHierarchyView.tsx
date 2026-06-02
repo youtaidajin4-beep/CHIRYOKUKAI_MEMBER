@@ -124,7 +124,9 @@ export function ReferrerHierarchyView({
                   {REPRESENTATIVE}
                 </h2>
                 <p className="mt-1 text-sm text-supira-muted">
-                  ロッジオーナー {loCount} 名 · 紹介メンバー総数 {totalMembers} 名
+                  ロッジオーナー {loCount} 名 · 所属登録{" "}
+                  {forest.representative.totalAffiliatedMembers} 名 · 紹介経路{" "}
+                  {totalMembers} 名
                 </p>
               </div>
             </div>
@@ -222,13 +224,14 @@ export function ReferrerHierarchyView({
           <h2 className="mb-4 text-lg font-bold text-supira-primary">
             ネットワーク全体
           </h2>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatPill label="ロッジオーナー" value={loCount} />
-            <StatPill label="紹介メンバー総数" value={totalMembers} />
             <StatPill
-              label="その他紹介者"
-              value={summaries.filter((s) => s.tier === "other").length}
+              label="所属登録済み"
+              value={forest.representative.totalAffiliatedMembers}
             />
+            <StatPill label="所属未登録" value={forest.representative.noLodgeCount} />
+            <StatPill label="紹介経路総数" value={totalMembers} />
           </div>
         </Card>
       )}
@@ -275,8 +278,9 @@ function LodgeOwnerSection({
       <ReferrerNodeCard
         name={branch.canonicalName}
         tier="lodge_owner"
-        directCount={branch.directMembers.length}
-        totalCount={branch.totalMembers}
+        affiliatedCount={branch.affiliatedCount}
+        directCount={branch.directReferralCount}
+        totalCount={branch.totalReferralCount}
         otherReferrerCount={branch.otherReferrerCount}
         subtitle="ロッジオーナー"
         expanded={expanded}
@@ -290,11 +294,28 @@ function LodgeOwnerSection({
       />
 
       {expanded && (
-        <div className="mt-3 space-y-3 border-l-2 border-dashed border-supira-border/80 pl-4 ml-2">
-          {branch.directMembers.length > 0 && (
+        <div className="mt-3 space-y-4 border-l-2 border-dashed border-supira-border/80 pl-4 ml-2">
+          {branch.affiliatedMembers.length > 0 && (
+            <div>
+              <p className="mb-2 text-xs font-semibold text-supira-primary">
+                所属メンバー（{branch.affiliatedMembers.length}）
+              </p>
+              <MemberTable members={branch.affiliatedMembers} compact />
+            </div>
+          )}
+
+          {(branch.directMembers.length > 0 || others.length > 0) && (
             <div>
               <p className="mb-2 text-xs font-semibold text-supira-muted">
-                直接紹介メンバー（{branch.directMembers.length}）
+                紹介経路
+              </p>
+            </div>
+          )}
+
+          {branch.directMembers.length > 0 && (
+            <div>
+              <p className="mb-2 text-xs font-medium text-supira-muted">
+                直接紹介（{branch.directMembers.length}）
               </p>
               <MemberTable members={branch.directMembers} compact />
             </div>
@@ -302,7 +323,7 @@ function LodgeOwnerSection({
 
           {others.length > 0 && (
             <div>
-              <p className="mb-2 text-xs font-semibold text-supira-muted">
+              <p className="mb-2 text-xs font-medium text-supira-muted">
                 傘下のその他紹介者
               </p>
               <div className="space-y-2">
@@ -321,9 +342,11 @@ function LodgeOwnerSection({
             </div>
           )}
 
-          {branch.directMembers.length === 0 && others.length === 0 && (
+          {branch.affiliatedMembers.length === 0 &&
+            branch.directMembers.length === 0 &&
+            others.length === 0 && (
             <p className="py-4 text-center text-xs text-supira-muted italic">
-              傘下の紹介はまだありません
+              所属・紹介の登録はまだありません
             </p>
           )}
         </div>

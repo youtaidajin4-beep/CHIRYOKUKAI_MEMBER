@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useMembers } from "@/context/MemberContext";
-import { isIncompleteMember, hasNoReferrer } from "@/lib/member-utils";
+import { isIncompleteMember, hasNoReferrer, hasNoLodge } from "@/lib/member-utils";
 
 const navGroups = [
   {
@@ -149,6 +149,11 @@ export function Sidebar() {
           {members.filter(hasNoReferrer).length > 0 && (
             <p className="mt-1 text-amber-700">
               紹介者未登録 {members.filter(hasNoReferrer).length} 名
+            </p>
+          )}
+          {members.filter(hasNoLodge).length > 0 && (
+            <p className="mt-0.5 text-amber-700">
+              所属ロッジ未登録 {members.filter(hasNoLodge).length} 名
             </p>
           )}
         </div>

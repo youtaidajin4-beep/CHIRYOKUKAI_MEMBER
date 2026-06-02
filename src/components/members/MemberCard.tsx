@@ -88,6 +88,14 @@ export function MemberCard({ member }: MemberCardProps) {
         </div>
 
         <div className="flex items-center gap-2 text-xs">
+          <span className="shrink-0 text-supira-subtle">所属</span>
+          {member.lodgeOwnerName ? (
+            <span className="text-slate-700 truncate">{member.lodgeOwnerName}</span>
+          ) : (
+            <span className="font-medium text-orange-700">ロッジ未登録</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 text-xs">
           <Network className="h-3.5 w-3.5 text-supira-subtle shrink-0" />
           {member.referrerName ? (
             <span className="text-slate-700 truncate">{member.referrerName}</span>

@@ -38,6 +38,7 @@ export const MEMBER_SECTIONS: MemberSection[] = [
     title: "紹介者・紹介経路",
     description: "紹介制ネットワークの核",
     fields: [
+      "lodgeOwnerName",
       "referrerName",
       "referrerRelation",
       "referralRoute",

@@ -184,10 +184,13 @@ export interface OtherReferrerBranch {
 
 export interface LodgeOwnerBranch {
   canonicalName: string;
+  affiliatedMembers: Member[];
   directMembers: Member[];
   otherReferrers: OtherReferrerBranch[];
   summary: ReferrerSummaryLite | null;
-  totalMembers: number;
+  affiliatedCount: number;
+  directReferralCount: number;
+  totalReferralCount: number;
   otherReferrerCount: number;
 }
 
@@ -197,6 +200,8 @@ export interface ReferrerForest {
     lodgeOwners: LodgeOwnerBranch[];
     unassignedOthers: OtherReferrerBranch[];
     totalReferredMembers: number;
+    totalAffiliatedMembers: number;
+    noLodgeCount: number;
   };
 }
 
@@ -255,6 +260,33 @@ export function isKnownReferrer(canonicalName: string): boolean {
   const tier = getReferrerTier(canonicalName);
   if (tier !== "other") return true;
   return canonicalName in OTHER_REFERRER_PARENT;
+}
+
+/** 所属ロッジ名を LODGE_OWNERS のフルネームに正規化 */
+export function normalizeLodgeOwnerName(raw: string): string {
+  const trimmed = (raw || "").trim();
+  if (!trimmed) return "";
+  if (LODGE_OWNER_SET.has(trimmed)) return trimmed;
+  const alias = REFERRER_ALIASES[trimmed];
+  if (alias && LODGE_OWNER_SET.has(alias)) return alias;
+  const fromLo = uniquePrefixMatch(trimmed, [...LODGE_OWNERS]);
+  if (fromLo) return fromLo;
+  return trimmed;
+}
+
+/** 初回マイグレーション用：紹介者から所属ロッジを推測（手直し前提） */
+export function suggestLodgeOwnerName(
+  member: Pick<Member, "referrerName">
+): string {
+  const ref = (member.referrerName || "").trim();
+  if (!ref) return "";
+  const tier = getReferrerTier(ref);
+  if (tier === "lodge_owner") return ref;
+  if (tier === "other") {
+    const parent = OTHER_REFERRER_PARENT[ref];
+    if (parent && LODGE_OWNER_SET.has(parent)) return parent;
+  }
+  return "";
 }
 
 export function getReferrerSelectOptions(): {
@@ -316,21 +348,37 @@ export function buildReferrerForest(
     othersByLodgeOwner.get(parent)!.push(branch);
   }
 
+  const membersByLodge = new Map<string, Member[]>();
+  let noLodgeCount = 0;
+  for (const m of members) {
+    const lodge = (m.lodgeOwnerName || "").trim();
+    if (!lodge) {
+      noLodgeCount++;
+      continue;
+    }
+    if (!membersByLodge.has(lodge)) membersByLodge.set(lodge, []);
+    membersByLodge.get(lodge)!.push(m);
+  }
+
   const lodgeOwners: LodgeOwnerBranch[] = LODGE_OWNERS.map((loName) => {
+    const affiliatedMembers = membersByLodge.get(loName) || [];
     const directMembers = membersByReferrer.get(loName) || [];
     const otherReferrers = (othersByLodgeOwner.get(loName) || []).sort((a, b) =>
       a.canonicalName.localeCompare(b.canonicalName, "ja")
     );
-    const indirectCount = otherReferrers.reduce(
+    const indirectReferralCount = otherReferrers.reduce(
       (sum, o) => sum + o.directMembers.length,
       0
     );
     return {
       canonicalName: loName,
+      affiliatedMembers,
       directMembers,
       otherReferrers,
       summary: summaryByName.get(loName) || null,
-      totalMembers: directMembers.length + indirectCount,
+      affiliatedCount: affiliatedMembers.length,
+      directReferralCount: directMembers.length,
+      totalReferralCount: directMembers.length + indirectReferralCount,
       otherReferrerCount: otherReferrers.length,
     };
   });
@@ -338,6 +386,11 @@ export function buildReferrerForest(
   let totalReferredMembers = 0;
   for (const [, list] of membersByReferrer) {
     totalReferredMembers += list.length;
+  }
+
+  let totalAffiliatedMembers = 0;
+  for (const [, list] of membersByLodge) {
+    totalAffiliatedMembers += list.length;
   }
 
   return {
@@ -348,6 +401,8 @@ export function buildReferrerForest(
         a.canonicalName.localeCompare(b.canonicalName, "ja")
       ),
       totalReferredMembers,
+      totalAffiliatedMembers,
+      noLodgeCount,
     },
   };
 }
@@ -365,4 +420,39 @@ export function migrateMemberReferrerNames(members: Member[]): Member[] {
       referrerId: ref?.id || m.referrerId,
     };
   });
+}
+
+function resolveLodgeOwnerId(
+  lodgeOwnerName: string,
+  members: Member[]
+): string {
+  if (!lodgeOwnerName) return "";
+  const lo = members.find((m) => m.name === lodgeOwnerName);
+  return lo?.id || "";
+}
+
+export function migrateMemberLodgeNames(members: Member[]): Member[] {
+  return members.map((m) => {
+    let lodgeOwnerName = (m.lodgeOwnerName || "").trim();
+    if (lodgeOwnerName) {
+      lodgeOwnerName = normalizeLodgeOwnerName(lodgeOwnerName);
+    } else {
+      lodgeOwnerName = suggestLodgeOwnerName(m);
+    }
+    const lodgeOwnerId = lodgeOwnerName
+      ? resolveLodgeOwnerId(lodgeOwnerName, members) || m.lodgeOwnerId || ""
+      : "";
+    if (
+      lodgeOwnerName === (m.lodgeOwnerName || "") &&
+      lodgeOwnerId === (m.lodgeOwnerId || "")
+    ) {
+      return m;
+    }
+    return { ...m, lodgeOwnerName, lodgeOwnerId };
+  });
+}
+
+/** v8: 紹介者正規化 + 所属ロッジ推測 */
+export function migrateMembersForV8(members: Member[]): Member[] {
+  return migrateMemberLodgeNames(migrateMemberReferrerNames(members));
 }

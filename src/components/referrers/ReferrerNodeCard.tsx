@@ -10,7 +10,9 @@ interface ReferrerNodeCardProps {
   tier: ReferrerTier;
   directCount: number;
   totalCount?: number;
+  affiliatedCount?: number;
   otherReferrerCount?: number;
+  countLabel?: string;
   subtitle?: string;
   expanded?: boolean;
   selected?: boolean;
@@ -24,7 +26,9 @@ export function ReferrerNodeCard({
   tier,
   directCount,
   totalCount,
+  affiliatedCount,
   otherReferrerCount = 0,
+  countLabel = "名",
   subtitle,
   expanded,
   selected,
@@ -32,7 +36,8 @@ export function ReferrerNodeCard({
   onSelect,
   compact,
 }: ReferrerNodeCardProps) {
-  const displayTotal = totalCount ?? directCount;
+  const displayTotal =
+    affiliatedCount != null ? affiliatedCount : totalCount ?? directCount;
 
   return (
     <article
@@ -90,23 +95,42 @@ export function ReferrerNodeCard({
             {displayTotal}
           </p>
           <p className="text-[10px] text-supira-subtle">
-            {totalCount != null && totalCount !== directCount
-              ? `直接 ${directCount}`
-              : "名"}
+            {affiliatedCount != null
+              ? "所属"
+              : totalCount != null && totalCount !== directCount
+                ? `紹介 ${directCount}`
+                : countLabel}
           </p>
         </div>
       </div>
 
-      {!compact && (directCount > 0 || otherReferrerCount > 0) && (
-        <div className="mt-3 flex items-center gap-3 text-xs text-supira-muted">
-          <span className="inline-flex items-center gap-1">
-            <Users className="h-3.5 w-3.5" />
-            直接紹介 {directCount}
-          </span>
-          {otherReferrerCount > 0 && (
+      {!compact && (affiliatedCount != null || directCount > 0 || otherReferrerCount > 0) && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-supira-muted">
+          {affiliatedCount != null && (
+            <span className="inline-flex items-center gap-1">
+              <Users className="h-3.5 w-3.5" />
+              所属 {affiliatedCount}
+            </span>
+          )}
+          {affiliatedCount == null && (
+            <>
+              <span className="inline-flex items-center gap-1">
+                <Users className="h-3.5 w-3.5" />
+                直接紹介 {directCount}
+              </span>
+              {otherReferrerCount > 0 && (
+                <span className="inline-flex items-center gap-1">
+                  <Network className="h-3.5 w-3.5" />
+                  経由含む {displayTotal}
+                </span>
+              )}
+            </>
+          )}
+          {affiliatedCount != null && (directCount > 0 || otherReferrerCount > 0) && (
             <span className="inline-flex items-center gap-1">
               <Network className="h-3.5 w-3.5" />
-              経由含む {displayTotal}
+              紹介経路 {directCount}
+              {totalCount != null && totalCount > directCount ? ` / ${totalCount}` : ""}
             </span>
           )}
         </div>

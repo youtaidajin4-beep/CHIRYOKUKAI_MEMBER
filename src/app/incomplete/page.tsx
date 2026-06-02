@@ -10,13 +10,14 @@ import { Card } from "@/components/ui/Card";
 import { MemberAvatar } from "@/components/ui/MemberAvatar";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { useMembers } from "@/context/MemberContext";
-import { isIncompleteMember, hasNoReferrer } from "@/lib/member-utils";
+import { isIncompleteMember, hasNoReferrer, hasNoLodge } from "@/lib/member-utils";
 import type { Member } from "@/lib/types";
 
 function getIncompleteReasons(m: Member): string[] {
   const reasons: string[] = [];
   if (m.type === "不明") reasons.push("区分不明");
   if (hasNoReferrer(m)) reasons.push("紹介者未登録");
+  if (hasNoLodge(m)) reasons.push("所属ロッジ未登録");
   if (!m.company?.trim() && ["OB", "OG", "社会人", "企業関係者"].includes(m.type))
     reasons.push("所属企業なし");
   if (!m.school?.trim() && m.type === "学生") reasons.push("学校名なし");

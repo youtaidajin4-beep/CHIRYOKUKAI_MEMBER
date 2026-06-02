@@ -395,7 +395,8 @@ export function MemberProfileView({
                     </div>
                   )}
                   <InfoGrid>
-                    <InfoField label="紹介者" value={renderValue("referrerName")} highlight />
+                    <InfoField label="所属ロッジ" value={renderValue("lodgeOwnerName")} highlight={!member.lodgeOwnerName} />
+                    <InfoField label="紹介者" value={renderValue("referrerName")} highlight={!member.referrerName} />
                     <InfoField label="関係" value={renderValue("referrerRelation")} />
                     <InfoField label="紹介ルート" value={renderValue("referralRoute")} className="sm:col-span-2" />
                     <InfoField label="紹介者確認" value={renderValue("referralConfirmed")} />

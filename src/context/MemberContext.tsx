@@ -16,31 +16,30 @@ import {
   generateId,
   markDuplicateWarnings,
 } from "@/lib/member-utils";
-import { migrateMemberReferrerNames } from "@/lib/referrer-registry";
+import { migrateMembersForV8 } from "@/lib/referrer-registry";
 import type { Member } from "@/lib/types";
 
-const STORAGE_KEY = "supira-chiryokukai-members-v7";
+const STORAGE_KEY = "supira-chiryokukai-members-v8";
 
 function loadMembers(): Member[] {
+  const legacyKeys = [
+    STORAGE_KEY,
+    "supira-chiryokukai-members-v7",
+    "supira-chiryokukai-members-v6",
+  ];
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
+    for (const key of legacyKeys) {
+      const stored = localStorage.getItem(key);
+      if (!stored) continue;
       const parsed = JSON.parse(stored) as Member[];
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return markDuplicateWarnings(migrateMemberReferrerNames(parsed));
-      }
-    }
-    const legacy = localStorage.getItem("supira-chiryokukai-members-v6");
-    if (legacy) {
-      const parsed = JSON.parse(legacy) as Member[];
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return markDuplicateWarnings(migrateMemberReferrerNames(parsed));
+        return markDuplicateWarnings(migrateMembersForV8(parsed));
       }
     }
   } catch {
     /* fall through */
   }
-  return markDuplicateWarnings(migrateMemberReferrerNames(initialMembers));
+  return markDuplicateWarnings(migrateMembersForV8(initialMembers));
 }
 
 interface MemberContextValue {
@@ -57,7 +56,7 @@ const MemberContext = createContext<MemberContextValue | null>(null);
 
 export function MemberProvider({ children }: { children: ReactNode }) {
   const [members, setMembers] = useState<Member[]>(() =>
-    markDuplicateWarnings(migrateMemberReferrerNames(initialMembers))
+    markDuplicateWarnings(migrateMembersForV8(initialMembers))
   );
   const storageLoaded = useRef(false);
 

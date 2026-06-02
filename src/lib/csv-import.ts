@@ -75,6 +75,7 @@ export interface ImportPreview {
   total: number;
   missingName: number;
   missingReferrer: number;
+  missingLodge: number;
   missingContact: number;
   possibleDuplicates: number;
 }
@@ -87,6 +88,7 @@ export function analyzeImport(
 ): ImportPreview {
   let missingName = 0;
   let missingReferrer = 0;
+  let missingLodge = 0;
   let missingContact = 0;
   let possibleDuplicates = 0;
 
@@ -96,6 +98,7 @@ export function analyzeImport(
     const rec = rowToMember(row, mapping);
     if (!rec.name?.trim()) missingName++;
     if (!rec.referrerName?.trim()) missingReferrer++;
+    if (!rec.lodgeOwnerName?.trim()) missingLodge++;
     if (!rec.email?.trim() && !rec.phone?.trim() && !rec.facebookUrl?.trim())
       missingContact++;
 
@@ -114,6 +117,7 @@ export function analyzeImport(
     total: rows.length,
     missingName,
     missingReferrer,
+    missingLodge,
     missingContact,
     possibleDuplicates,
   };

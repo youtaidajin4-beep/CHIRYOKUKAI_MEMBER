@@ -2,6 +2,7 @@ import type { Member, MemberType } from "./types";
 import {
   getReferrerParent,
   getReferrerTier,
+  normalizeLodgeOwnerName,
   normalizeReferrerName,
   type ReferrerTier,
 } from "./referrer-registry";
@@ -10,6 +11,7 @@ const WEIGHTS: { key: keyof Member; weight: number }[] = [
   { key: "name", weight: 10 },
   { key: "type", weight: 8 },
   { key: "referrerName", weight: 10 },
+  { key: "lodgeOwnerName", weight: 8 },
   { key: "email", weight: 6 },
   { key: "phone", weight: 6 },
   { key: "facebookUrl", weight: 4 },
@@ -42,6 +44,7 @@ export function calculateDataCompleteness(member: Partial<Member>): number {
 export function isIncompleteMember(m: Member): boolean {
   if (m.type === "不明") return true;
   if (!m.referrerName?.trim()) return true;
+  if (!m.lodgeOwnerName?.trim()) return true;
   if (!m.company?.trim() && (m.type === "OB" || m.type === "OG" || m.type === "社会人" || m.type === "企業関係者"))
     return true;
   if (!m.school?.trim() && m.type === "学生") return true;
@@ -53,6 +56,10 @@ export function isIncompleteMember(m: Member): boolean {
 
 export function hasNoReferrer(m: Member): boolean {
   return !m.referrerName?.trim() && !m.referrerId?.trim();
+}
+
+export function hasNoLodge(m: Member): boolean {
+  return !m.lodgeOwnerName?.trim() && !m.lodgeOwnerId?.trim();
 }
 
 export function isRecruitingCandidate(m: Member): boolean {
@@ -262,6 +269,7 @@ export function getDashboardStats(members: Member[], recentlyImportedDays = 30) 
     corporate: countByType(members, "企業関係者"),
     unknownType: countByType(members, "不明"),
     noReferrer: members.filter(hasNoReferrer).length,
+    noLodge: members.filter(hasNoLodge).length,
     incomplete: members.filter(isIncompleteMember).length,
     priorityA: members.filter((m) => m.priority === "A").length,
     recruitingCandidates: members.filter(isRecruitingCandidate).length,
@@ -302,6 +310,15 @@ export function enrichMember(partial: Partial<Member>, allMembers: Member[]): Me
     if (ref) referrerId = ref.id;
   }
 
+  const lodgeOwnerName = partial.lodgeOwnerName
+    ? normalizeLodgeOwnerName(partial.lodgeOwnerName)
+    : "";
+  let lodgeOwnerId = partial.lodgeOwnerId || "";
+  if (lodgeOwnerName && !lodgeOwnerId) {
+    const lo = allMembers.find((m) => m.name === lodgeOwnerName);
+    if (lo) lodgeOwnerId = lo.id;
+  }
+
   const base: Member = {
     id: partial.id || generateId(),
     name: partial.name || "",
@@ -321,6 +338,8 @@ export function enrichMember(partial: Partial<Member>, allMembers: Member[]): Me
     facebookUrl: partial.facebookUrl || "",
     referrerName,
     referrerId,
+    lodgeOwnerName,
+    lodgeOwnerId,
     referrerRelation: partial.referrerRelation || "不明",
     referralRoute: partial.referralRoute || "",
     referralConfirmed: partial.referralConfirmed || "未確認",
@@ -352,6 +371,8 @@ export function filterMembers(
     searchCompany?: string;
     searchSchool?: string;
     searchReferrer?: string;
+    searchLodge?: string;
+    lodgeOwner?: string;
     type?: string;
     area?: string;
     industry?: string;
@@ -360,6 +381,7 @@ export function filterMembers(
     recruitingStatus?: string;
     incompleteOnly?: boolean;
     noReferrerOnly?: boolean;
+    noLodgeOnly?: boolean;
     duplicateOnly?: boolean;
   }
 ): Member[] {
@@ -369,6 +391,13 @@ export function filterMembers(
     if (filters.searchCompany && !m.company.includes(filters.searchCompany)) return false;
     if (filters.searchSchool && !m.school.includes(filters.searchSchool)) return false;
     if (filters.searchReferrer && !m.referrerName.includes(filters.searchReferrer)) return false;
+    if (filters.searchLodge && !m.lodgeOwnerName.includes(filters.searchLodge)) return false;
+    if (
+      filters.lodgeOwner &&
+      filters.lodgeOwner !== "all" &&
+      m.lodgeOwnerName !== filters.lodgeOwner
+    )
+      return false;
     if (filters.type && filters.type !== "all" && m.type !== filters.type) return false;
     if (filters.area && filters.area !== "all" && m.area !== filters.area) return false;
     if (filters.industry && filters.industry !== "all" && m.industry !== filters.industry) return false;
@@ -383,6 +412,7 @@ export function filterMembers(
       return false;
     if (filters.incompleteOnly && !isIncompleteMember(m)) return false;
     if (filters.noReferrerOnly && !hasNoReferrer(m)) return false;
+    if (filters.noLodgeOnly && !hasNoLodge(m)) return false;
     if (filters.duplicateOnly && !m.duplicateWarning) return false;
     return true;
   });

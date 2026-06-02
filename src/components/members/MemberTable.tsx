@@ -58,6 +58,9 @@ export function MemberTable({ members, compact = false }: MemberTableProps) {
                   </th>
                 </>
               )}
+              <th className="px-3 py-3.5 text-left text-[10px] font-semibold uppercase tracking-wider text-supira-muted hidden md:table-cell">
+                所属ロッジ
+              </th>
               <th className="px-3 py-3.5 text-left text-[10px] font-semibold uppercase tracking-wider text-supira-muted hidden sm:table-cell">
                 紹介者
               </th>
@@ -142,6 +145,15 @@ export function MemberTable({ members, compact = false }: MemberTableProps) {
                     </td>
                   </>
                 )}
+                <td className="px-3 py-3.5 hidden md:table-cell max-w-[120px]">
+                  {m.lodgeOwnerName ? (
+                    <span className="text-slate-700 line-clamp-2">{m.lodgeOwnerName}</span>
+                  ) : (
+                    <span className="inline-flex rounded-md bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700">
+                      未登録
+                    </span>
+                  )}
+                </td>
                 <td className="px-3 py-3.5 hidden sm:table-cell max-w-[120px]">
                   {m.referrerName ? (
                     <span className="text-slate-700 line-clamp-2">{m.referrerName}</span>

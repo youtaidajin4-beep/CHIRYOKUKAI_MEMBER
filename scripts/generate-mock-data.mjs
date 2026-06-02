@@ -252,6 +252,8 @@ for (const row of uniqueRoster) {
     facebookUrl: "",
     referrerName: referrerShort,
     referrerId: "",
+    lodgeOwnerName: "",
+    lodgeOwnerId: "",
     referrerRelation: referrerShort ? "知人" : "不明",
     referralRoute: "",
     referralConfirmed: referrerShort ? "未確認" : "未確認",
@@ -325,6 +327,8 @@ for (const row of uniqueStudents) {
     facebookUrl: "",
     referrerName: "",
     referrerId: "",
+    lodgeOwnerName: "",
+    lodgeOwnerId: "",
     referrerRelation: "不明",
     referralRoute: "",
     referralConfirmed: "未確認",
@@ -363,10 +367,39 @@ for (const m of members) {
   delete m._referrerShort;
 }
 
+function normalizeLodgeOwnerName(raw) {
+  const trimmed = (raw || "").trim();
+  if (!trimmed) return "";
+  if (LODGE_OWNER_SET.has(trimmed)) return trimmed;
+  const alias = registry.aliases[trimmed];
+  if (alias && LODGE_OWNER_SET.has(alias)) return alias;
+  const fromLo = uniquePrefixMatch(trimmed, registry.lodgeOwners);
+  if (fromLo) return fromLo;
+  return trimmed;
+}
+
+function suggestLodgeOwnerName(member) {
+  const ref = (member.referrerName || "").trim();
+  if (!ref) return "";
+  if (LODGE_OWNER_SET.has(ref)) return ref;
+  const parent = registry.otherReferrerParent?.[ref];
+  if (parent && LODGE_OWNER_SET.has(parent)) return parent;
+  return "";
+}
+
+for (const m of members) {
+  const suggested = suggestLodgeOwnerName(m);
+  if (suggested) {
+    m.lodgeOwnerName = suggested;
+    m.lodgeOwnerId = nameToId[suggested] || "";
+  }
+}
+
 const WEIGHTS = [
   ["name", 10],
   ["type", 8],
   ["referrerName", 10],
+  ["lodgeOwnerName", 8],
   ["email", 6],
   ["phone", 6],
   ["facebookUrl", 4],

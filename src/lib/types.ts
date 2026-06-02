@@ -78,6 +78,8 @@ export interface Member {
   facebookUrl: string;
   referrerName: string;
   referrerId: string;
+  lodgeOwnerName: string;
+  lodgeOwnerId: string;
   referrerRelation: ReferrerRelation;
   referralRoute: string;
   referralConfirmed: ReferralConfirmed;
@@ -121,6 +123,8 @@ export const MEMBER_FIELD_LABELS: Record<MemberFieldKey, string> = {
   facebookUrl: "Facebook URL",
   referrerName: "紹介者名",
   referrerId: "紹介者ID",
+  lodgeOwnerName: "所属ロッジ",
+  lodgeOwnerId: "所属ロッジID",
   referrerRelation: "紹介者との関係",
   referralRoute: "紹介ルート",
   referralConfirmed: "紹介者確認",
@@ -152,6 +156,7 @@ export const RECOMMENDED_CSV_COLUMNS = [
   "電話番号",
   "Facebook URL",
   "紹介者",
+  "所属ロッジ",
   "紹介者との関係",
   "メモ",
 ];
@@ -184,6 +189,9 @@ export const CSV_COLUMN_ALIASES: Record<string, MemberFieldKey> = {
   Facebook: "facebookUrl",
   紹介者: "referrerName",
   紹介者名: "referrerName",
+  所属ロッジ: "lodgeOwnerName",
+  ロッジ: "lodgeOwnerName",
+  ロッジオーナー: "lodgeOwnerName",
   紹介者との関係: "referrerRelation",
   メモ: "memo",
 };

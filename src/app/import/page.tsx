@@ -83,6 +83,7 @@ export default function ImportPage() {
         phone: rec.phone || "",
         facebookUrl: rec.facebookUrl || "",
         referrerName: rec.referrerName || "",
+        lodgeOwnerName: rec.lodgeOwnerName || "",
         referrerRelation: (rec.referrerRelation as Member["referrerRelation"]) || "不明",
         memo: rec.memo || "",
         importSource: "知力会名簿CSV",
@@ -193,6 +194,7 @@ export default function ImportPage() {
             <ConfirmStat label="取り込み件数" value={preview.total} />
             <ConfirmStat label="氏名なし" value={preview.missingName} warn={preview.missingName > 0} />
             <ConfirmStat label="紹介者なし" value={preview.missingReferrer} warn={preview.missingReferrer > 0} />
+            <ConfirmStat label="所属ロッジなし" value={preview.missingLodge} warn={preview.missingLodge > 0} />
             <ConfirmStat label="連絡先なし" value={preview.missingContact} warn={preview.missingContact > 0} />
           </div>
 

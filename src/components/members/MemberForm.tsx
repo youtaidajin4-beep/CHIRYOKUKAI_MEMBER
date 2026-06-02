@@ -20,6 +20,7 @@ import type {
 import { MEMBER_SECTIONS, sectionCompleteness } from "@/lib/member-sections";
 import { calculateDataCompleteness } from "@/lib/member-utils";
 import {
+  LODGE_OWNERS,
   getReferrerSelectOptions,
   isKnownReferrer,
 } from "@/lib/referrer-registry";
@@ -73,6 +74,7 @@ export function MemberForm({
   const [activeSection, setActiveSection] = useState("basic");
   const referrerOptions = getReferrerSelectOptions();
   const initialReferrer = initial.referrerName || "";
+  const initialLodge = initial.lodgeOwnerName || "";
   const referrerInRegistry =
     !initialReferrer || isKnownReferrer(initialReferrer);
 
@@ -89,6 +91,8 @@ export function MemberForm({
     const get = (key: string) => (fd.get(key) as string) || "";
     const referrerName = get("referrerName");
     const ref = members.find((m) => m.name === referrerName);
+    const lodgeOwnerName = get("lodgeOwnerName");
+    const lo = members.find((m) => m.name === lodgeOwnerName);
 
     onSubmit({
       name: get("name"),
@@ -108,6 +112,8 @@ export function MemberForm({
       facebookUrl: get("facebookUrl"),
       referrerName,
       referrerId: ref?.id || "",
+      lodgeOwnerName,
+      lodgeOwnerId: lo?.id || "",
       referrerRelation: get("referrerRelation") as ReferrerRelation,
       referralRoute: get("referralRoute"),
       referralConfirmed: get("referralConfirmed") as ReferralConfirmed,
@@ -225,7 +231,33 @@ export function MemberForm({
             <Field label="Facebook URL" name="facebookUrl" type="url" defaultValue={initial.facebookUrl} className="sm:col-span-2" />
           </FormSection>
 
-          <FormSection id="referral" title="紹介者" hint="フルネームで登録 — 代表・LO・傘下紹介者から選択">
+          <FormSection id="referral" title="紹介・所属" hint="紹介者と所属ロッジは別項目です">
+            <div className="sm:col-span-2">
+              <label className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700">
+                所属ロッジ
+                <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                  推奨
+                </span>
+              </label>
+              <select
+                name="lodgeOwnerName"
+                defaultValue={initialLodge}
+                className="input-field"
+              >
+                <option value="">未選択</option>
+                {LODGE_OWNERS.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+                {initialLodge && !LODGE_OWNERS.includes(initialLodge as (typeof LODGE_OWNERS)[number]) && (
+                  <option value={initialLodge}>{initialLodge}</option>
+                )}
+              </select>
+              <p className="mt-1.5 text-xs text-supira-muted">
+                紹介してくれた人とは別に、メンバーが所属するロッジ（ロッジオーナー）を選びます。
+              </p>
+            </div>
             <div className="sm:col-span-2">
               <label className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700">
                 紹介者（フルネーム）
