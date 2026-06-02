@@ -23,6 +23,11 @@ import {
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PriorityBadge } from "@/components/ui/PriorityBadge";
+import { ReferrerTierBadge } from "@/components/referrers/ReferrerTierBadge";
+import {
+  getReferrerParent,
+  getReferrerTier,
+} from "@/lib/referrer-registry";
 import { TypeBadge } from "@/components/ui/TypeBadge";
 import { MemberAvatar } from "@/components/ui/MemberAvatar";
 import { ProgressRing } from "@/components/ui/ProgressRing";
@@ -375,6 +380,20 @@ export function MemberProfileView({
                 </MemberDetailCard>
 
                 <MemberDetailCard title="紹介者" icon={<UserCheck className="h-4 w-4" />} className="lg:col-span-2">
+                  {member.referrerName && (
+                    <div className="mb-4 flex flex-wrap items-center gap-2">
+                      <ReferrerTierBadge tier={getReferrerTier(member.referrerName)} />
+                      {getReferrerParent(member.referrerName) &&
+                        getReferrerTier(member.referrerName) === "other" && (
+                          <span className="text-xs text-supira-muted">
+                            担当ロッジオーナー:{" "}
+                            <span className="font-semibold text-supira-primary">
+                              {getReferrerParent(member.referrerName)}
+                            </span>
+                          </span>
+                        )}
+                    </div>
+                  )}
                   <InfoGrid>
                     <InfoField label="紹介者" value={renderValue("referrerName")} highlight />
                     <InfoField label="関係" value={renderValue("referrerRelation")} />

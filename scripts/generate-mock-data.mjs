@@ -4,6 +4,12 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const registry = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "../src/data/referrer-registry.json"), "utf-8")
+);
+const LODGE_OWNER_SET = new Set(registry.lodgeOwners);
+const CANONICAL_POOL = [registry.representative, ...registry.lodgeOwners];
+
 const STUDENT_FILES = ["students.tsv", "students-batch2.tsv"];
 
 function normalizeName(name) {
@@ -154,15 +160,30 @@ function resolveReferrerId(referrerShort, nameToId, allNames) {
   return "";
 }
 
+function uniquePrefixMatch(raw, pool) {
+  const matches = pool.filter((n) => n === raw || n.startsWith(raw) || raw.startsWith(n));
+  if (matches.length === 1) return matches[0];
+  if (matches.length > 1) {
+    const exact = matches.find((n) => n === raw);
+    if (exact) return exact;
+    const prefix = matches.find((n) => n.startsWith(raw));
+    if (prefix) return prefix;
+  }
+  return null;
+}
+
 function resolveReferrerFullName(referrerShort, allNames) {
   if (!referrerShort) return "";
-  const matches = allNames.filter(
-    (n) => n.startsWith(referrerShort) || n === referrerShort
-  );
-  if (matches.length === 0) return referrerShort;
-  if (matches.length === 1) return matches[0];
-  const exact = matches.find((n) => n.startsWith(referrerShort));
-  return exact || matches[0];
+  const trimmed = referrerShort.trim();
+  if (registry.aliases[trimmed]) return registry.aliases[trimmed];
+  if (trimmed === registry.representative) return registry.representative;
+  if (LODGE_OWNER_SET.has(trimmed)) return trimmed;
+  const pool = [...new Set([...CANONICAL_POOL, ...allNames])];
+  const fromPool = uniquePrefixMatch(trimmed, pool);
+  if (fromPool) return fromPool;
+  const memberMatch = uniquePrefixMatch(trimmed, allNames);
+  if (memberMatch) return memberMatch;
+  return trimmed;
 }
 
 function enrichExisting(existing, row) {

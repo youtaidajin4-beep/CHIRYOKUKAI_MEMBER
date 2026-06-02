@@ -16,9 +16,32 @@ import {
   generateId,
   markDuplicateWarnings,
 } from "@/lib/member-utils";
+import { migrateMemberReferrerNames } from "@/lib/referrer-registry";
 import type { Member } from "@/lib/types";
 
-const STORAGE_KEY = "supira-chiryokukai-members-v6";
+const STORAGE_KEY = "supira-chiryokukai-members-v7";
+
+function loadMembers(): Member[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as Member[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return markDuplicateWarnings(migrateMemberReferrerNames(parsed));
+      }
+    }
+    const legacy = localStorage.getItem("supira-chiryokukai-members-v6");
+    if (legacy) {
+      const parsed = JSON.parse(legacy) as Member[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return markDuplicateWarnings(migrateMemberReferrerNames(parsed));
+      }
+    }
+  } catch {
+    /* fall through */
+  }
+  return markDuplicateWarnings(migrateMemberReferrerNames(initialMembers));
+}
 
 interface MemberContextValue {
   members: Member[];
@@ -33,24 +56,15 @@ interface MemberContextValue {
 const MemberContext = createContext<MemberContextValue | null>(null);
 
 export function MemberProvider({ children }: { children: ReactNode }) {
-  const [members, setMembers] = useState<Member[]>(initialMembers);
+  const [members, setMembers] = useState<Member[]>(() =>
+    markDuplicateWarnings(migrateMemberReferrerNames(initialMembers))
+  );
   const storageLoaded = useRef(false);
 
   useEffect(() => {
     if (storageLoaded.current) return;
     storageLoaded.current = true;
-
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as Member[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setMembers(parsed);
-        }
-      }
-    } catch {
-      /* 初期データのまま */
-    }
+    setMembers(loadMembers());
   }, []);
 
   useEffect(() => {

@@ -19,6 +19,10 @@ import type {
 } from "@/lib/types";
 import { MEMBER_SECTIONS, sectionCompleteness } from "@/lib/member-sections";
 import { calculateDataCompleteness } from "@/lib/member-utils";
+import {
+  getReferrerSelectOptions,
+  isKnownReferrer,
+} from "@/lib/referrer-registry";
 
 interface MemberFormProps {
   initial?: Partial<Member>;
@@ -67,7 +71,10 @@ export function MemberForm({
   submitLabel = "保存する",
 }: MemberFormProps) {
   const [activeSection, setActiveSection] = useState("basic");
-  const referrers = members.filter((m) => m.name).map((m) => ({ id: m.id, name: m.name }));
+  const referrerOptions = getReferrerSelectOptions();
+  const initialReferrer = initial.referrerName || "";
+  const referrerInRegistry =
+    !initialReferrer || isKnownReferrer(initialReferrer);
 
   const draftForProgress = useMemo(
     () => ({ ...initial, name: initial.name || "" }) as Member,
@@ -218,26 +225,51 @@ export function MemberForm({
             <Field label="Facebook URL" name="facebookUrl" type="url" defaultValue={initial.facebookUrl} className="sm:col-span-2" />
           </FormSection>
 
-          <FormSection id="referral" title="紹介者" hint="紹介制ネットワークの要 — 強く推奨">
+          <FormSection id="referral" title="紹介者" hint="フルネームで登録 — 代表・LO・傘下紹介者から選択">
             <div className="sm:col-span-2">
               <label className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700">
-                紹介者
+                紹介者（フルネーム）
                 <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
                   推奨
                 </span>
               </label>
-              <input
+              <select
                 name="referrerName"
-                list="referrer-list"
-                defaultValue={initial.referrerName}
+                defaultValue={initialReferrer}
                 className="input-field"
-                placeholder="紹介者名を入力（候補から選択可）"
-              />
-              <datalist id="referrer-list">
-                {referrers.map((r) => (
-                  <option key={r.id} value={r.name} />
-                ))}
-              </datalist>
+              >
+                <option value="">未選択</option>
+                <optgroup label="代表">
+                  <option value={referrerOptions.representative}>
+                    {referrerOptions.representative}
+                  </option>
+                </optgroup>
+                <optgroup label="ロッジオーナー（管理者）">
+                  {referrerOptions.lodgeOwners.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="その他の紹介者（傘下）">
+                  {referrerOptions.others.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </optgroup>
+                {initialReferrer &&
+                  !referrerInRegistry && (
+                    <optgroup label="現在の登録（レジストリ外）">
+                      <option value={initialReferrer}>{initialReferrer}</option>
+                    </optgroup>
+                  )}
+              </select>
+              {initialReferrer && !referrerInRegistry && (
+                <p className="mt-2 text-xs text-amber-700">
+                  登録中の紹介者名が公式リストにありません。可能であればリストから選び直してください。
+                </p>
+              )}
             </div>
             <SelectField label="紹介者との関係" name="referrerRelation" options={RELATIONS} defaultValue={initial.referrerRelation || "不明"} />
             <Field label="紹介ルート" name="referralRoute" defaultValue={initial.referralRoute} placeholder="例: 知力会イベント経由" className="sm:col-span-2" />

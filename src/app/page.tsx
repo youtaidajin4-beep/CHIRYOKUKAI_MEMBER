@@ -21,6 +21,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { AlertBanner } from "@/components/ui/AlertBanner";
 import { BarChart } from "@/components/ui/BarChart";
+import { ReferrerTierBadge } from "@/components/referrers/ReferrerTierBadge";
 import {
   DashboardHero,
   DashboardQuickLinks,
@@ -226,6 +227,7 @@ export default function DashboardPage() {
               <tr className="border-b border-supira-border text-xs uppercase tracking-wider text-supira-muted">
                 <th className="px-4 py-3 text-left font-semibold">#</th>
                 <th className="px-4 py-3 text-left font-semibold">紹介者</th>
+                <th className="px-4 py-3 text-left font-semibold hidden lg:table-cell">階層</th>
                 <th className="px-4 py-3 text-right font-semibold">紹介人数</th>
                 <th className="px-4 py-3 text-right font-semibold hidden sm:table-cell">A</th>
                 <th className="px-4 py-3 text-right font-semibold hidden md:table-cell">求人候補</th>
@@ -251,6 +253,9 @@ export default function DashboardPage() {
                       <Network className="h-4 w-4 text-supira-subtle" />
                       {r.referrerName}
                     </Link>
+                  </td>
+                  <td className="px-4 py-3.5 hidden lg:table-cell">
+                    <ReferrerTierBadge tier={r.tier} />
                   </td>
                   <td className="px-4 py-3.5 text-right">
                     <span className="text-lg font-bold tabular-nums text-supira-primary">

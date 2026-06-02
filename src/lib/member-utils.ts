@@ -1,4 +1,10 @@
 import type { Member, MemberType } from "./types";
+import {
+  getReferrerParent,
+  getReferrerTier,
+  normalizeReferrerName,
+  type ReferrerTier,
+} from "./referrer-registry";
 
 const WEIGHTS: { key: keyof Member; weight: number }[] = [
   { key: "name", weight: 10 },
@@ -102,6 +108,8 @@ export function groupByArea(members: Member[]): Record<string, number> {
 export interface ReferrerSummary {
   referrerId: string;
   referrerName: string;
+  tier: ReferrerTier;
+  parentName?: string;
   total: number;
   students: number;
   obOg: number;
@@ -114,21 +122,25 @@ export interface ReferrerSummary {
 }
 
 export function buildReferrerSummaries(members: Member[]): ReferrerSummary[] {
-  const referrers = members.filter(
-    (m) => !hasNoReferrer(m) && members.some((x) => x.referrerId === m.id || x.referrerName === m.name)
-  );
-
+  const allNames = members.map((m) => m.name);
   const referrerNames = new Set<string>();
   members.forEach((m) => {
-    if (m.referrerName) referrerNames.add(m.referrerName);
+    if (m.referrerName) {
+      referrerNames.add(normalizeReferrerName(m.referrerName, allNames));
+    }
   });
 
   const summaries: ReferrerSummary[] = [];
 
   for (const name of referrerNames) {
-    const referred = members.filter((m) => m.referrerName === name);
+    if (!name) continue;
+    const referred = members.filter(
+      (m) => normalizeReferrerName(m.referrerName, allNames) === name
+    );
     const referrerMember = members.find((m) => m.name === name);
     const referrerId = referrerMember?.id || `ref-${name}`;
+    const tier = getReferrerTier(name);
+    const parentName = getReferrerParent(name);
 
     let lastUpdated = "";
     referred.forEach((m) => {
@@ -138,6 +150,8 @@ export function buildReferrerSummaries(members: Member[]): ReferrerSummary[] {
     summaries.push({
       referrerId,
       referrerName: name,
+      tier,
+      parentName,
       total: referred.length,
       students: referred.filter((m) => m.type === "学生").length,
       obOg: referred.filter((m) => m.type === "OB" || m.type === "OG").length,
@@ -278,7 +292,10 @@ export function generateId(prefix = "m"): string {
 
 export function enrichMember(partial: Partial<Member>, allMembers: Member[]): Member {
   const now = new Date().toISOString();
-  const referrerName = partial.referrerName || "";
+  const allNames = allMembers.map((m) => m.name);
+  const referrerName = partial.referrerName
+    ? normalizeReferrerName(partial.referrerName, allNames)
+    : "";
   let referrerId = partial.referrerId || "";
   if (referrerName && !referrerId) {
     const ref = allMembers.find((m) => m.name === referrerName);
